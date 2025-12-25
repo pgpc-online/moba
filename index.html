@@ -347,64 +347,7 @@
     </div>
 <script>
 // 1. Initialize Audio
-const lobbyMusic = new Audio('bg.mp3'); 
-lobbyMusic.loop = true;
 
-// Function to start music safely
-function startMusic() {
-    const savedTime = localStorage.getItem('bgmTime');
-    if (savedTime) {
-        lobbyMusic.currentTime = parseFloat(savedTime);
-    }
-    lobbyMusic.play().catch(err => console.log("WebView blocked audio:", err));
-}
-
-// In WebView, we listen for a click OR a touch to trigger audio
-window.addEventListener('touchstart', startMusic, { once: true });
-window.addEventListener('click', startMusic, { once: true });
-
-// Save time when leaving
-window.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-        localStorage.setItem('bgmTime', lobbyMusic.currentTime);
-    }
-});
-
-// ---------------------------------------------------------
-// UPDATED: CLICK ANYWHERE TO START MUSIC AND FULLSCREEN
-// ---------------------------------------------------------
-/*window.addEventListener('click', () => {
-    // Start Music
-    lobbyMusic.play().catch(err => console.log("Music blocked:", err));
-    
-    // Trigger Fullscreen and Orientation Lock
-    launchGame();
-    
-    console.log("Audio unlocked and Fullscreen requested by global click");
-}, { once: true }); // This ensures it only triggers on the very first click
-
-
-// 2. Fullscreen logic
-/*async function launchGame() {
-    try {
-        const container = document.documentElement;
-        
-        // Request Fullscreen
-        if (container.requestFullscreen) {
-            await container.requestFullscreen();
-        } else if (container.webkitRequestFullscreen) {
-            await container.webkitRequestFullscreen();
-        }
-
-        // Lock Orientation to landscape (Note: This only works in Fullscreen)
-        if (screen.orientation && screen.orientation.lock) {
-            await screen.orientation.lock('landscape').catch(e => console.log("Lock failed:", e));
-        }
-    } catch (err) {
-        console.warn("Fullscreen/Orientation failed:", err);
-    }
-}
-*/
 // 3. Start Button Logic (Now just for UI feedback)
 document.getElementById('startBtn').addEventListener('click', (e) => {
     // UI Feedback
@@ -421,10 +364,6 @@ function setMode(mode, el) {
     document.getElementById('playLabel').innerText = mode;
 }
 
-// Save position before leaving
-window.onbeforeunload = function() {
-    localStorage.setItem('bgmTime', lobbyMusic.currentTime);
-};
 
 // Prevent context menu
 window.oncontextmenu = (e) => e.preventDefault();
