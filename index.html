@@ -319,7 +319,7 @@
 
         <!-- BOTTOM NAV -->
         <nav class="bottom-nav">
-            <div class="nav-item" onclick="window.location.href = 'https://pgpc-online.github.io/moba/hero.html'">
+            <div class="nav-item" onclick="window.location.href = 'hero.html'">
                 <i class="fas fa-users"></i>
                 <span>HEROES</span>
             </div>
@@ -349,18 +349,31 @@
 // 1. Initialize Audio
 const lobbyMusic = new Audio('bg.mp3'); 
 lobbyMusic.loop = true;
-lobbyMusic.volume = 0.5;
 
-// Try to get saved time from previous page
-const savedTime = localStorage.getItem('bgmTime');
-if (savedTime) {
-    lobbyMusic.currentTime = parseFloat(savedTime);
+// Function to start music safely
+function startMusic() {
+    const savedTime = localStorage.getItem('bgmTime');
+    if (savedTime) {
+        lobbyMusic.currentTime = parseFloat(savedTime);
+    }
+    lobbyMusic.play().catch(err => console.log("WebView blocked audio:", err));
 }
+
+// In WebView, we listen for a click OR a touch to trigger audio
+window.addEventListener('touchstart', startMusic, { once: true });
+window.addEventListener('click', startMusic, { once: true });
+
+// Save time when leaving
+window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        localStorage.setItem('bgmTime', lobbyMusic.currentTime);
+    }
+});
 
 // ---------------------------------------------------------
 // UPDATED: CLICK ANYWHERE TO START MUSIC AND FULLSCREEN
 // ---------------------------------------------------------
-window.addEventListener('click', () => {
+/*window.addEventListener('click', () => {
     // Start Music
     lobbyMusic.play().catch(err => console.log("Music blocked:", err));
     
