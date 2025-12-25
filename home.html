@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- viewport-fit=cover fills the entire screen including the notch area -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MOBA Lobby UI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --gold: #f1c40f;
+            --blue: #3498db;
+            --dark-blue: #2980b9;
+            --glass: rgba(0, 0, 0, 0.5);
+            --border: rgba(255, 255, 255, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            color: white;
+        }
+
+        /* Portrait Warning */
+        #portrait-warning {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media screen and (orientation: portrait) {
+            #portrait-warning { display: flex; }
+        }
+
+        /* Main Screen */
+        #lobby-screen {
+            width: 100vw;
+            height: 100dvh;
+            background: url('bg.jpg') center/cover no-repeat;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bg-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.4) 100%);
+            pointer-events: none;
+        }
+
+        /* --- TOP BAR --- */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            /* Full screen - no notch safe padding as requested */
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            padding: 5px 20px 5px 5px;
+            border-radius: 40px 10px 10px 40px;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 50px;
+            height: 50px;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+        }
+
+        .level-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: var(--gold);
+            color: #000;
+            font-weight: 900;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            border: 1px solid #000;
+        }
+
+        .name-section { display: flex; flex-direction: column; }
+        .player-name { font-weight: bold; font-size: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .xp-bar-container { width: 100px; height: 6px; background: #222; border-radius: 3px; margin-top: 4px; border: 1px solid var(--border); }
+        .xp-fill { height: 100%; background: #2ecc71; border-radius: 3px; box-shadow: 0 0 5px #2ecc71; }
+
+        .currencies { display: flex; gap: 10px; }
+        .currency-item {
+            background: var(--glass);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(5px);
+        }
+        .currency-item i { color: var(--blue); font-size: 12px; }
+
+        /* --- SIDE MENU --- */
+        .side-menu-left {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .side-btn {
+            background: linear-gradient(90deg, rgba(41, 128, 185, 0.8), rgba(44, 62, 80, 0.8));
+            color: white;
+            border: 1px solid var(--border);
+            padding: 10px 25px;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 1px;
+            clip-path: polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%);
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+            width: 140px;
+        }
+
+        .side-btn:active { transform: scale(0.95); background: var(--blue); }
+
+        /* --- HERO ART --- */
+        .hero-container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            height: 90vh;
+            pointer-events: none;
+        }
+
+        .hero-img {
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 30px rgba(0,0,0,0.8));
+            animation: heroIdle 5s ease-in-out infinite;
+        }
+
+        @keyframes heroIdle {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.02); }
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 25px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+        }
+
+        .nav-item {
+            text-align: center;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: 0.2s;
+        }
+
+        .nav-item i { font-size: 20px; margin-bottom: 4px; color: #fff; }
+        .nav-item span { font-size: 10px; font-weight: bold; display: block; }
+        .nav-item:hover, .nav-item:active { opacity: 1; color: var(--blue); }
+
+        /* --- ACTION AREA --- */
+        .action-area {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+        }
+
+        .mode-selector {
+            display: flex;
+            background: var(--glass);
+            border-radius: 8px;
+            padding: 3px;
+            border: 1px solid var(--border);
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            padding: 6px 15px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+        .mode-btn.active {
+            background: var(--blue);
+            color: white;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+
+        .play-button {
+            background: linear-gradient(to bottom, #f39c12, #e67e22);
+            border: 2px solid #f1c40f;
+            padding: 12px 50px;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: 0.1s;
+            text-align: center;
+        }
+
+        .play-button:active { transform: scale(0.95); filter: brightness(1.2); }
+
+        .rank-stars { font-size: 10px; color: #fff; letter-spacing: 2px; margin-bottom: 2px; }
+        .play-text { font-size: 22px; font-weight: 900; letter-spacing: 1px; font-style: italic; }
+
+    </style>
+</head>
+<body>
+
+    <div id="portrait-warning">
+        <i class="fas fa-mobile-alt" style="font-size: 50px; color: var(--gold); margin-bottom: 15px;"></i>
+        <h2>PLEASE ROTATE YOUR DEVICE</h2>
+        <p>This game is designed for landscape mode.</p>
+    </div>
+
+    <div id="lobby-screen">
+        <div class="bg-overlay"></div>
+
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="player-info">
+                <div class="avatar-container">
+                    <img src="https://i.ibb.co/Vv6K39P/avatar-placeholder.png" alt="Avatar" class="avatar-img">
+                    <div class="level-badge">24</div>
+                </div>
+                <div class="name-section">
+                    <span class="player-name">PLAYER_NAME</span>
+                    <div class="xp-bar-container">
+                        <div class="xp-fill" style="width: 65%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="currencies">
+                <div class="currency-item"><i class="fas fa-gem"></i> 123</div>
+                <div class="currency-item"><i class="fas fa-bolt"></i> 72/62</div>
+                <div class="currency-item"><i class="fas fa-coins"></i> 632</div>
+            </div>
+        </header>
+
+        <!-- LEFT SIDE -->
+        <aside class="side-menu-left">
+            <button class="side-btn">EVENTS</button>
+            <button class="side-btn">QUESTS</button>
+            <button class="side-btn">SHOP</button>
+        </aside>
+
+        <!-- HERO CONTAINER -->
+        <div class="hero-container">
+            <!-- Ensure hero1.png is in the same folder -->
+            <img src="hero1.png" alt="Hero Art" class="hero-img" onerror="this.src='https://i.ibb.co/890L5Wv/hero-placeholder.png'">
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <nav class="bottom-nav">
+            <div class="nav-item" onclick="location.href='hero.html'">
+                <i class="fas fa-users"></i>
+                <span>HEROES</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-briefcase"></i>
+                <span>INVENTORY</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-calendar-day"></i>
+                <span>DAILY</span>
+            </div>
+        </nav>
+
+        <!-- ACTION AREA -->
+        <div class="action-area">
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="setMode('RANKED', this)">RANKED</button>
+                <button class="mode-btn" onclick="setMode('CLASSIC', this)">CLASSIC</button>
+            </div>
+            <button class="play-button" id="startBtn">
+                <div class="rank-stars">★★★★★</div>
+                <div class="play-text" id="playLabel">RANKED</div>
+            </button>
+        </div>
+    </div>
+<script>
+// 1. Initialize Audio
+const lobbyMusic = new Audio('bg.mp3'); 
+lobbyMusic.loop = true;
+lobbyMusic.volume = 0.5;
+
+// Try to get saved time from previous page
+const savedTime = localStorage.getItem('bgmTime');
+if (savedTime) {
+    lobbyMusic.currentTime = parseFloat(savedTime);
+}
+
+// ---------------------------------------------------------
+// UPDATED: CLICK ANYWHERE TO START MUSIC AND FULLSCREEN
+// ---------------------------------------------------------
+window.addEventListener('click', () => {
+    // Start Music
+    lobbyMusic.play().catch(err => console.log("Music blocked:", err));
+    
+    // Trigger Fullscreen and Orientation Lock
+    launchGame();
+    
+    console.log("Audio unlocked and Fullscreen requested by global click");
+}, { once: true }); // This ensures it only triggers on the very first click
+
+
+// 2. Fullscreen logic
+async function launchGame() {
+    try {
+        const container = document.documentElement;
+        
+        // Request Fullscreen
+        if (container.requestFullscreen) {
+            await container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+            await container.webkitRequestFullscreen();
+        }
+
+        // Lock Orientation to landscape (Note: This only works in Fullscreen)
+        if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock('landscape').catch(e => console.log("Lock failed:", e));
+        }
+    } catch (err) {
+        console.warn("Fullscreen/Orientation failed:", err);
+    }
+}
+
+// 3. Start Button Logic (Now just for UI feedback)
+document.getElementById('startBtn').addEventListener('click', (e) => {
+    // UI Feedback
+    const btn = document.getElementById('startBtn');
+    btn.style.filter = "grayscale(1)";
+    btn.style.pointerEvents = "none"; // Disable after clicking
+    document.getElementById('playLabel').innerText = "FINDING...";
+});
+
+// Mode switcher
+function setMode(mode, el) {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('playLabel').innerText = mode;
+}
+
+// Save position before leaving
+window.onbeforeunload = function() {
+    localStorage.setItem('bgmTime', lobbyMusic.currentTime);
+};
+
+// Prevent context menu
+window.oncontextmenu = (e) => e.preventDefault();
+</script>
+</body>
+</html>
