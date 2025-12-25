@@ -187,10 +187,7 @@
 </head>
 <body>
 
-    <div id="portrait-warning">
-        <i class="fas fa-redo" style="font-size: 40px; color: var(--gold); margin-bottom: 20px;"></i>
-        <h2>ROTATE TO LANDSCAPE</h2>
-    </div>
+    
 
     <div class="heroes-page">
         <!-- COMBINED HEADER & FILTERS -->
@@ -216,12 +213,12 @@
 
         <!-- HERO GRID -->
         <main class="heroes-grid" id="heroesGrid">
-            <div class="hero-card" data-role="mage">
+            <div class="hero-card" data-role="support">
                 <div class="role-icon"><i class="fas fa-hat-wizard"></i></div>
                 <img src="hero1.png" onerror="this.src='https://i.ibb.co/Vv6K39P/avatar-placeholder.png'">
                 <div class="hero-info">
                     <div class="hero-name">Ophelia</div>
-                    <div class="hero-role-text">Mage / Support</div>
+                    <div class="hero-role-text">Tank / Support</div>
                 </div>
             </div>
 
@@ -283,17 +280,6 @@
                 if (window.navigator.vibrate) window.navigator.vibrate(10);
             });
         });
-
-        // Audio Logic
-        const bgm = new Audio('bg.mp3');
-        bgm.loop = true;
-        document.body.addEventListener('click', () => {
-            if (bgm.paused) {
-                const savedTime = localStorage.getItem('bgmTime');
-                if (savedTime) bgm.currentTime = savedTime;
-                bgm.play();
-            }
-        }, { once: true });
     </script>
 </body>
 </html>
