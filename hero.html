@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Heroes Selection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #3498db;
+            --gold: #f1c40f;
+            --bg-dark: #060910;
+            --glass: rgba(15, 23, 42, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        /* --- Portrait Warning --- */
+        #portrait-warning {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        @media screen and (orientation: portrait) { #portrait-warning { display: flex; } }
+
+        .heroes-page {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a2a44 0%, #060910 100%);
+            display: flex;
+            flex-direction: column;
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+
+        /* --- COMPACT HEADER --- */
+        .heroes-header {
+            height: 60px; /* Slimmer header */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        .header-left h1 {
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            margin-right: 10px;
+        }
+
+        /* --- INTEGRATED FILTER BAR --- */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding: 5px 0;
+        }
+        .filter-bar::-webkit-scrollbar { display: none; }
+
+        .filter-btn {
+            padding: 6px 15px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: #888;
+            cursor: pointer;
+            font-size: 10px; /* Smaller font */
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-btn.active {
+            background: var(--primary-blue);
+            color: #fff;
+            border-color: #5dade2;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.4);
+        }
+
+        /* --- HERO GRID (More Space) --- */
+        .heroes-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+            padding: 20px 30px;
+            overflow-y: auto;
+        }
+
+        .heroes-grid::-webkit-scrollbar { width: 4px; }
+        .heroes-grid::-webkit-scrollbar-thumb { background: var(--primary-blue); border-radius: 10px; }
+
+        /* --- HERO CARD --- */
+        .hero-card {
+            position: relative;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 3/4;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .hero-card:hover { transform: translateY(-5px); border-color: var(--primary-blue); }
+        .hero-card.selected { border: 2px solid var(--gold); box-shadow: 0 0 15px rgba(241, 196, 15, 0.3); }
+
+        .hero-card img { width: 100%; height: 100%; object-fit: cover; }
+
+        .hero-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 5px 5px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            text-align: center;
+        }
+
+        .hero-name { font-size: 13px; font-weight: bold; text-transform: uppercase; }
+        .hero-role-text { font-size: 9px; color: var(--primary-blue); font-weight: 800; }
+
+        .role-icon {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.5);
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="portrait-warning">
+        <i class="fas fa-redo" style="font-size: 40px; color: var(--gold); margin-bottom: 20px;"></i>
+        <h2>ROTATE TO LANDSCAPE</h2>
+    </div>
+
+    <div class="heroes-page">
+        <!-- COMBINED HEADER & FILTERS -->
+        <header class="heroes-header">
+            <div class="header-left">
+                <div class="back-btn" onclick="history.back()">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <h1>Champions</h1>
+            </div>
+
+            <div class="filter-bar">
+                <button class="filter-btn active" data-role="all">ALL</button>
+                <button class="filter-btn" data-role="tank">TANK</button>
+                <button class="filter-btn" data-role="mage">MAGE</button>
+                <button class="filter-btn" data-role="assassin">ASSASSIN</button>
+                <button class="filter-btn" data-role="support">SUPPORT</button>
+            </div>
+            
+            <!-- Empty div to balance flexbox if needed, or put Search icon here -->
+            <div style="width: 35px;"></div> 
+        </header>
+
+        <!-- HERO GRID -->
+        <main class="heroes-grid" id="heroesGrid">
+            <div class="hero-card" data-role="mage">
+                <div class="role-icon"><i class="fas fa-hat-wizard"></i></div>
+                <img src="hero1.png" onerror="this.src='https://i.ibb.co/Vv6K39P/avatar-placeholder.png'">
+                <div class="hero-info">
+                    <div class="hero-name">Ophelia</div>
+                    <div class="hero-role-text">Mage / Support</div>
+                </div>
+            </div>
+
+            <div class="hero-card" data-role="tank">
+                <div class="role-icon"><i class="fas fa-shield-alt"></i></div>
+                <img src="hero2.png" onerror="this.src='https://i.ibb.co/Vv6K39P/avatar-placeholder.png'">
+                <div class="hero-info">
+                    <div class="hero-name">Brakk</div>
+                    <div class="hero-role-text">Pure Tank</div>
+                </div>
+            </div>
+
+            <div class="hero-card" data-role="assassin">
+                <div class="role-icon"><i class="fas fa-khanda"></i></div>
+                <img src="hero3.png" onerror="this.src='https://i.ibb.co/Vv6K39P/avatar-placeholder.png'">
+                <div class="hero-info">
+                    <div class="hero-name">Shade</div>
+                    <div class="hero-role-text">Assassin</div>
+                </div>
+            </div>
+
+            <div class="hero-card" data-role="support">
+                <div class="role-icon"><i class="fas fa-leaf"></i></div>
+                <img src="hero4.png" onerror="this.src='https://i.ibb.co/Vv6K39P/avatar-placeholder.png'">
+                <div class="hero-info">
+                    <div class="hero-name">Aeris</div>
+                    <div class="hero-role-text">Support</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Filter logic
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const heroCards = document.querySelectorAll('.hero-card');
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const role = btn.dataset.role;
+
+                heroCards.forEach(card => {
+                    if (role === 'all' || card.dataset.role === role) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Selection logic
+        heroCards.forEach(card => {
+            card.addEventListener('click', () => {
+                heroCards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                if (window.navigator.vibrate) window.navigator.vibrate(10);
+            });
+        });
+
+        // Audio Logic
+        const bgm = new Audio('bg.mp3');
+        bgm.loop = true;
+        document.body.addEventListener('click', () => {
+            if (bgm.paused) {
+                const savedTime = localStorage.getItem('bgmTime');
+                if (savedTime) bgm.currentTime = savedTime;
+                bgm.play();
+            }
+        }, { once: true });
+    </script>
+</body>
+</html>
