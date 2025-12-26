@@ -256,12 +256,18 @@
         const instruction = document.getElementById('tap-to-hear');
 
         window.addEventListener('click', () => {
-            if (video.muted) {
-                video.muted = false;
-                video.currentTime = 0; // Restart for full impact
-                instruction.style.display = 'none';
-            }
-        }, { once: true });
+    if (video.muted) {
+        // 1. Unmute the video
+        video.muted = false;
+        video.currentTime = 0;
+        instruction.style.display = 'none';
+
+        // 2. TELL SKETCHWARE TO STOP THE BG MUSIC
+        if (window.Android) {
+            window.Android.stopAppMusic();
+        }
+    }
+}, { once: true });
     </script>
 </body>
 </html>
